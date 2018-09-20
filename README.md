@@ -3,6 +3,19 @@ An example of how to implement user-scheduled jobs for running Firebase Function
 
 ---
 
+I ran into needing this solution after working on a project which required users to have the ability to schedule functions to run at any time and at repeating intervals if necessary.
+The Firebase blog includes a method for running cron-jobs, but it is only for predefined Firebase functions.
+
+The main Firebase function, `scheduleJobs`, works by iterating over all jobs defined in the node `/scheduledJobs` in Firebase's realtime database.
+If a job's scheduled time is before or at the current time, the jobs information is copied over to the node `/runningJobs` in the database.
+If a job is set to repeat on an interval, the job's run time is set to the next interval.
+If a job is only supposed to run once, or it is set to stop repeating after a time which has passed, it is deleted from `/scheduledJobs`.
+
+Another Firebase function, `executeJobs`, uses a hook listening for the creation of each job in `/runningJobs`, when a new job is added,
+it runs the associated function in `custom-functions.ts`. After the function has completed, it is deleted from `/runningJobs`.
+
+---
+
 ### Instructions
 1. Deploy the functions to Firebase
 2. Setup your Realtime Database to use the same format as example-firebase-export.json
@@ -12,7 +25,7 @@ An example of how to implement user-scheduled jobs for running Firebase Function
 Example cron-job service: https://cron-job.org/en/
 
 
-If your custom-functions take a while to complete, you will likely want to extend the timeout time of the executeJobs function, which can be done from the Google Cloud Functions dashboard by clicking on executeJobs and then clicking edit.
+If your functions in `custom-functions.ts` take longer than 9 minutes to complete, you will need to extend the timeout time of the `executeJobs` function, which can be done from the Google Cloud Functions dashboard by clicking on `executeJobs` and then clicking edit.
 
 ---
 
